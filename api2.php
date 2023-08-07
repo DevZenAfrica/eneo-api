@@ -1,6 +1,18 @@
 <?php
 	include("connect_bd.php");
+
 	header('Content-type:application/json;charset=utf-8');
+	// Autoriser l'accès depuis n'importe quelle origine
+header('Access-Control-Allow-Origin: *');
+
+// Autoriser les méthodes de requête spécifiées
+header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE');
+
+// Autoriser les en-têtes personnalisés et les en-têtes par défaut
+header('Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept');
+
+// Spécifier la durée de validité des résultats préchargés (en secondes)
+header('Access-Control-Max-Age: 3600');
 
 	$key = "f3c6f9640ce74c2fb73e27b955064425";
 
@@ -127,7 +139,7 @@
 		   $pass = encrypt( $pass, $key, $key);
 		  
 		  // echo $pass;
-           $query="SELECT * FROM `utilisateur` WHERE (`EMAIL`='$val' or `PHONE`='$val') AND password='$pass'"; 
+           $query="SELECT `ID_UTILISATEUR`,`ID_TAGS`,`EMAIL`,`PHONE`,`NOM`,`PRENOM`,`ID_PARENT_UTILISATEUR`,`STATUS` FROM `utilisateur` WHERE (`EMAIL`='$val' or `PHONE`='$val') AND password='$pass'"; 
         	// var_dump($query);
 			//echo $query;
 		    $req=$bdd->query($query, PDO::FETCH_ASSOC);
