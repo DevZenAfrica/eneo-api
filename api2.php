@@ -2,6 +2,86 @@
 	include("connect_bd.php");
 	header('Content-type:application/json;charset=utf-8');
 
+	$key = "f3c6f9640ce74c2fb73e27b955064425";
+
+	function getIVFromUser($identifier) {
+		include("connect_bd.php");
+	
+		try {
+			// Connexion à la base de données
+			
+	
+			// Préparation de la requête de sélection
+			$stmt = $bdd->prepare("SELECT IV FROM utilisateur WHERE EMAIL = :identifier OR PHONE = :identifier");
+	
+			// Exécution de la requête avec la valeur du paramètre
+			$stmt->bindParam(':identifier', $identifier);
+			$stmt->execute();
+	
+			// Récupération du résultat de la requête
+			$row = $stmt->fetch(PDO::FETCH_ASSOC);
+	
+			if ($row) {
+				return $row['IV'];
+			} else {
+				return null;
+			}
+		} catch (PDOException $e) {
+			echo "Erreur lors de la récupération de l'IV de l'utilisateur depuis la base de données : " . $e->getMessage();
+			return null;
+		}
+	}
+
+
+	function getPDWFromUser($identifier) {
+		include("connect_bd.php");
+	
+		try {
+			// Connexion à la base de données
+			
+	
+			// Préparation de la requête de sélection
+			$stmt = $bdd->prepare("SELECT `PASSWORD` FROM utilisateur WHERE EMAIL = :identifier OR PHONE = :identifier");
+	
+			// Exécution de la requête avec la valeur du paramètre
+			$stmt->bindParam(':identifier', $identifier);
+			$stmt->execute();
+	
+			// Récupération du résultat de la requête
+			$row = $stmt->fetch(PDO::FETCH_ASSOC);
+	
+			if ($row) {
+				return $row['PASSWORD'];
+			} else {
+				return null;
+			}
+		} catch (PDOException $e) {
+			echo "Erreur lors de la récupération du PASSWORD de l'utilisateur depuis la base de données : " . $e->getMessage();
+			return null;
+		}
+	}
+	
+
+
+	function encrypt($data, $key, $iv) {
+		$iv='f3c6f9640ce74c2a';
+		$cipher = "AES-256-CBC";
+		$options = OPENSSL_RAW_DATA;
+		$encrypted = openssl_encrypt($data, $cipher, $key, $options, $iv);
+		return base64_encode($encrypted);
+	}
+	
+	function decrypt($data, $key, $iv) {
+		$iv='f3c6f9640ce74c2a';
+		$cipher = "AES-256-CBC";
+		$options = OPENSSL_RAW_DATA;
+		$decrypted = openssl_decrypt(base64_decode($data), $cipher, $key, $options, $iv);
+		return $decrypted;
+	}
+
+// Génération d'un vecteur d'initialisation aléatoire
+
+
 
  	if(isset($_GET["sendOTP"]))
 		{
@@ -34,17 +114,22 @@
 		}
 
 
-		if(isset($_GET["useLogin"]))
+		if(isset($_GET["userLogin"]))
 		{
-           $tr=(isset($_GET["EmailOrPhone"]) and isset($_GET["PASSWORD"]));
+           $tr=(isset($_GET["LOGIN"]) and isset($_GET["PASSWORD"]));
       
          if( $tr)
          {
              	    $result = array();
-         $val=$_GET["EmailOrPhone"];
-		 $pass=$_GET["PASSWORD"];
-         $query="SELECT * FROM `utilisateur` WHERE (`EMAIL`='$val' or `PHONE`='$val') AND password='$pass'"; 
+           $val=$_GET["LOGIN"];
+		   $pass=$_GET["PASSWORD"];
+
+		   $pass = encrypt( $pass, $key, $key);
+		  
+		  // echo $pass;
+           $query="SELECT * FROM `utilisateur` WHERE (`EMAIL`='$val' or `PHONE`='$val') AND password='$pass'"; 
         	// var_dump($query);
+			//echo $query;
 		    $req=$bdd->query($query, PDO::FETCH_ASSOC);
     		$resultats=$req->fetch();
     	
@@ -1476,13 +1561,17 @@ print($jsonString);
 		 $nom=isset($_GET["NOM"])?$_GET["NOM"]:NULL;
          $prenom=isset($_GET["PRENOM"])?$_GET["PRENOM"]:NULL;
 		 $idParent=isset($_GET["ID_PARENT_UTILISATEUR"])?$_GET["ID_PARENT_UTILISATEUR"]:NULL;
+		 $pass=$_GET["PASSWORD"]??'123456';
 
-         $query="INSERT INTO `utilisateur` (`ID_UTILISATEUR`, `ID_TAGS`, `EMAIL`, `PHONE`, `NOM`, `PRENOM`, `ID_PARENT_UTILISATEUR`)
-		         VALUES (NULL, '".$_GET["ID_TAGS"]."', '".$email."', '".$phone."', '".$nom."', '".$prenom."', '".$idParent."')"; 
+		 $pass = encrypt($pass, $key, $key);
+
+         $query="INSERT INTO `utilisateur` (`ID_UTILISATEUR`, `ID_TAGS`, `EMAIL`, `PHONE`, `PASSWORD`, `NOM`, `PRENOM`, `ID_PARENT_UTILISATEUR`)
+		         VALUES (NULL, '".$_GET["ID_TAGS"]."', '".$email."', '".$phone."',  '".$pass."', '".$nom."', '".$prenom."', '".$idParent."')"; 
+
           $req=$bdd->query($query, PDO::FETCH_ASSOC);
                  if($req)
                  {
-                   print(true);   
+                   print($query);   
                  }
                  else
                  {
@@ -1492,6 +1581,47 @@ print($jsonString);
 		
          }
      
+		}
+
+		if (isset($_GET["updateUser"])) {
+			$tr = (isset($_GET["EMAIL"]) || isset($_GET["PHONE"]));
+			    $iv_update = openssl_random_pseudo_bytes(16); 
+				$val = $_GET["EMAIL"] ?? $_GET["PHONE"];
+				$email = isset($_GET["EMAIL"]) ? $_GET["EMAIL"] : NULL;
+				$phone = isset($_GET["PHONE"]) ? $_GET["PHONE"] : NULL;
+				$nom = isset($_GET["NOM"]) ? $_GET["NOM"] : NULL ;
+				$prenom = isset($_GET["PRENOM"]) ? $_GET["PRENOM"] : NULL;
+				
+				$pass = $_GET["PASSWORD"] ?? '123456';
+				$pass = encrypt($pass, $key, $key);
+				
+				$query = "UPDATE utilisateur SET EMAIL = :email, PHONE = :phone, `PASSWORD` = :pass, 
+						  NOM = :nom, PRENOM = :prenom  WHERE EMAIL = :email or PHONE = :phone";
+				
+				try {
+	
+					// Préparation de la requête de mise à jour
+					$stmt = $bdd->prepare($query);
+					
+					// Exécution de la requête avec les valeurs des paramètres
+					$stmt->bindParam(':email', $email);
+					$stmt->bindParam(':phone', $phone);
+					$stmt->bindParam(':pass', $pass);
+					$stmt->bindParam(':nom', $nom);
+					$stmt->bindParam(':prenom', $prenom);
+					$stmt->execute();
+					
+					$rowCount = $stmt->rowCount();
+					
+					if ($rowCount > 0) {
+						echo "Mise à jour réussie pour l'utilisateur avec ID_TAGS : " . $_GET["ID_TAGS"];
+					} else {
+						echo "Aucune mise à jour effectuée. L'utilisateur avec ID_TAGS : " . $_GET["ID_TAGS"] . " n'a pas été trouvé.";
+					}
+				} catch (PDOException $e) {
+					echo "Erreur lors de la mise à jour de l'utilisateur dans la base de données : " . $e->getMessage();
+				}
+			
 		}
 
 		if(isset($_GET["deleteUser"]))
