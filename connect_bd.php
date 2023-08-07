@@ -28,9 +28,10 @@
 $user='admin_eneo_user';
 $pass='877Daa2g_eneo';
 $database='admin_eneo_dashboard';
+$host='37.187.28.103';
 
 try{
-    $bdd = new PDO("mysql:host=localhost;dbname=$database", $user, $pass,array(
+    $bdd = new PDO("mysql:host=$host;dbname=$database", $user, $pass,array(
         PDO::ATTR_PERSISTENT => true,
         PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8'
     ));

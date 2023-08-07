@@ -10,6 +10,9 @@
          if( $tr)
          {
          $val=$_GET["EMAIL"]??$_GET["PHONE"];
+
+		 $query="SELECT ID_UTILISATEUR  FROM utilisateur WHERE EMAIL=$val or PHONE=$val";
+		 
          $email=isset($_GET["EMAIL"])?$_GET["EMAIL"]:NULL;
          $phone=isset($_GET["PHONE"])?$_GET["PHONE"]:NULL;
 		 $nom=isset($_GET["NOM"])?$_GET["NOM"]:NULL;
@@ -31,7 +34,29 @@
 		}
 
 
+		if(isset($_GET["useLogin"]))
+		{
+           $tr=(isset($_GET["EmailOrPhone"]) and isset($_GET["PASSWORD"]));
+      
+         if( $tr)
+         {
+             	    $result = array();
+         $val=$_GET["EmailOrPhone"];
+		 $pass=$_GET["PASSWORD"];
+         $query="SELECT * FROM `utilisateur` WHERE (`EMAIL`='$val' or `PHONE`='$val') AND password='$pass'"; 
+        	// var_dump($query);
+		    $req=$bdd->query($query, PDO::FETCH_ASSOC);
+    		$resultats=$req->fetch();
+    	
+    	    // foreach($resultats as $resultat )
+    		// {
+    		//     array_push($result,$resultat);
+    		// }
 
+          print(json_encode($resultats, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK));
+         }
+     
+		}
 
 
 
