@@ -141,7 +141,7 @@ header('Access-Control-Max-Age: 3600');
 		  // echo $pass;
            $query="SELECT `ID_UTILISATEUR`,`ID_TAGS`,`EMAIL`,`PHONE`,`NOM`,`PRENOM`,`ID_PARENT_UTILISATEUR`,`STATUS` FROM `utilisateur` WHERE (`EMAIL`='$val' or `PHONE`='$val') AND password='$pass'"; 
         	// var_dump($query);
-			//echo $query;
+			////echo $query;
 		    $req=$bdd->query($query, PDO::FETCH_ASSOC);
     		$resultats=$req->fetch();
     	
@@ -468,71 +468,72 @@ GROUP BY
 if (isset($_GET["getCountContractInMonth"]))
 {
     $result_all = array();
-	if(isset($_GET["DISPATCH_DATE"]) && !empty($_GET["DISPATCH_DATE"]) )
-	{
-		$date=$_GET["DISPATCH_DATE"];
-		if(isset($_GET["ID_TAGS"]) and !empty($_GET["ID_TAGS"]) and $_GET["ID_TAGS"]!=="GLOBAL")
-		{
-		  if (isset($_GET["MONTH"]) && !empty($_GET["MONTH"]))
+			if(isset($_GET["DISPATCH_DATE"]) && !empty($_GET["DISPATCH_DATE"]) )
 			{
-					$MONTHS=explode(",", $_GET["MONTH"]);
-					foreach($MONTHS  as $key => $month)
+				$date=$_GET["DISPATCH_DATE"];
+				if(isset($_GET["ID_TAGS"]) and !empty($_GET["ID_TAGS"]) and $_GET["ID_TAGS"]!=="GLOBAL")
+				{
+				if (isset($_GET["MONTH"]) && !empty($_GET["MONTH"]))
 					{
-						if ($key==0)
-						{
+							$MONTHS=explode(",", $_GET["MONTH"]);
+							foreach($MONTHS  as $key => $month)
+							{
+								if ($key==0)
+								{
+											
+										if($date==2021 && $month==1) $query_all="SELECT $month as MONTHS,0 as NBRES";
+									else $query_all="SELECT $month as MONTHS,  count(*) as NBRES  FROM `final_referentiele` WHERE `TUTELLE`='".$_GET["ID_TAGS"]."' AND MONTH(SAVE_DATE)=$month AND YEAR(SAVE_DATE)=$date";
+								}
+								else
+								{
 									
-								if($date==2021 && $month==1) $query_all="SELECT $month as MONTHS,0 as NBRES";
-							else $query_all="SELECT $month as MONTHS,  count(*) as NBRES  FROM `final_referentiele` WHERE `TUTELLE`='".$_GET["ID_TAGS"]."' AND MONTH(SAVE_DATE)=$month AND YEAR(SAVE_DATE)=$date";
-						}
-						else
-						{
-							
-							
-							if($date==2021 && $month==1) $query_all.="SELECT $month as MONTHS,0 as NBRES";
-							else $query_all.=" UNION SELECT $month as MONTHS,  count(*) as NBRES  FROM `final_referentiele` WHERE `TUTELLE`='".$_GET["ID_TAGS"]."' AND MONTH(SAVE_DATE)=$month AND YEAR(SAVE_DATE)=$date";
-						}
-					}
-				//	echo $query;
-						$req_all=$bdd->query($query_all, PDO::FETCH_ASSOC);
-						$resultats_all=$req_all->fetchAll();
-						
-						foreach($resultats_all as $resultat_all )
-						{
-							array_push($result_all,(object)$resultat_all);
-						}
-			}	
-		}
-		else
-		{
-			if (isset($_GET["MONTH"]) && !empty($_GET["MONTH"]))
-			{
-					$MONTHS=explode(",", $_GET["MONTH"]);
-					foreach($MONTHS  as $key => $month)
+									
+									if($date==2021 && $month==1) $query_all.="SELECT $month as MONTHS,0 as NBRES";
+									else $query_all.=" UNION SELECT $month as MONTHS,  count(*) as NBRES  FROM `final_referentiele` WHERE `TUTELLE`='".$_GET["ID_TAGS"]."' AND MONTH(SAVE_DATE)=$month AND YEAR(SAVE_DATE)=$date";
+								}
+							}
+						//	//echo $query;
+								$req_all=$bdd->query($query_all, PDO::FETCH_ASSOC);
+								$resultats_all=$req_all->fetchAll();
+								
+								foreach($resultats_all as $resultat_all )
+								{
+									array_push($result_all,(object)$resultat_all);
+								}
+					}	
+					//echo $query_all;
+				}
+				else
+				{
+					if (isset($_GET["MONTH"]) && !empty($_GET["MONTH"]))
 					{
-						if ($key==0)
-						{
-							 
-							   if($date==2021 && $month==1) $query_all="SELECT $month as MONTHS,0 as NBRES";	
-							else  $query_all="SELECT $month as MONTHS,  count(*) as NBRES  FROM final_referentiele WHERE MONTH(SAVE_DATE)=$month AND YEAR(SAVE_DATE)=$date";
-						}
-						else
-						{	
-			
-							  if($date==2021 && $month==1) $query_all.="SELECT $month as MONTHS,0 as NBRES";
-							else 				$query_all.=" UNION SELECT $month as MONTHS,  count(*) as NBRES FROM final_referentiele WHERE MONTH(SAVE_DATE)=$month AND YEAR(SAVE_DATE)=$date";
-						}
-					}
-					 // echo $query;
-						$req_all=$bdd->query($query_all, PDO::FETCH_ASSOC);
-						$resultats_all=$req_all->fetchAll();
-						foreach($resultats_all as $resultat_all )
-						{
-		
-							array_push($result_all,(object)$resultat_all);
-						}
-		  }	
-	   }	
-	}
+							$MONTHS=explode(",", $_GET["MONTH"]);
+							foreach($MONTHS  as $key => $month)
+							{
+								if ($key==0)
+								{
+									
+									if($date==2021 && $month==1) $query_all="SELECT $month as MONTHS,0 as NBRES";	
+									else  $query_all="SELECT $month as MONTHS,  count(*) as NBRES  FROM final_referentiele WHERE MONTH(SAVE_DATE)=$month AND YEAR(SAVE_DATE)=$date";
+								}
+								else
+								{	
+					
+									if($date==2021 && $month==1) $query_all.="SELECT $month as MONTHS,0 as NBRES";
+									else 				$query_all.=" UNION SELECT $month as MONTHS,  count(*) as NBRES FROM final_referentiele WHERE MONTH(SAVE_DATE)=$month AND YEAR(SAVE_DATE)=$date";
+								}
+							}
+							// //echo $query;
+								$req_all=$bdd->query($query_all, PDO::FETCH_ASSOC);
+								$resultats_all=$req_all->fetchAll();
+								foreach($resultats_all as $resultat_all )
+								{
+				
+									array_push($result_all,(object)$resultat_all);
+								}
+				}	
+			}	
+			}
 
 
 
@@ -551,166 +552,169 @@ if (isset($_GET["getCountContractInMonth"]))
 
 
 	$result = array();
-	if(isset($_GET["DISPATCH_DATE"]) && !empty($_GET["DISPATCH_DATE"]) )
-	{
-		$date=$_GET["DISPATCH_DATE"];
-		if(isset($_GET["ID_TAGS"]) and !empty($_GET["ID_TAGS"]) and $_GET["ID_TAGS"]!=="GLOBAL")
-		{
-		  if (isset($_GET["MONTH"]) && !empty($_GET["MONTH"]))
+			if(isset($_GET["DISPATCH_DATE"]) && !empty($_GET["DISPATCH_DATE"]) )
 			{
-					$MONTHS=explode(",", $_GET["MONTH"]);
-					foreach($MONTHS  as $key => $month)
-					{
-						if ($key==0)
-						{
-									
-								if($date==2021 && $month==1) $query="SELECT $month as MONTHS,0 as NBRES";
-							else $query="SELECT $month as MONTHS,  count(*) as NBRES  FROM `final_referentiel_retirer` WHERE `TUTELLE`='".$_GET["ID_TAGS"]."' AND `MONTHS`=$month AND `YEAR`=$date";
-						}
-						else
-						{
-							
-							
-							if($date==2021 && $month==1) $query.="SELECT $month as MONTHS,0 as NBRES";
-							else $query.=" UNION SELECT $month as MONTHS,  count(*) as NBRES  FROM `final_referentiel_retirer` WHERE `TUTELLE`='".$_GET["ID_TAGS"]."' AND `MONTHS`=$month AND `YEAR`=$date";
-						}
-					}
-				//	echo $query;
-						$req=$bdd->query($query, PDO::FETCH_ASSOC);
-						$resultats=$req->fetchAll();
-						$i=0;
-						foreach($resultats as $resultat )
-						{
-						 if($result_all[$i]->NBRES==0)
-						   array_push($result,(object)array("MONTHS"=>$resultat["MONTHS"],"NBRES"=>0));
-							 else
-							array_push($result,(object)$resultat);
-							$i=$i+1;
-						}
-			}	
-		}
-		else
-		{
-			if (isset($_GET["MONTH"]) && !empty($_GET["MONTH"]))
-			{
-					$MONTHS=explode(",", $_GET["MONTH"]);
-					foreach($MONTHS  as $key => $month)
-					{
-						if ($key==0)
-						{
-							 
-							   if($date==2021 && $month==1) $query="SELECT $month as MONTHS,0 as NBRES";	
-							else  $query="SELECT $month as MONTHS,  count(*) as NBRES  FROM final_referentiel_retirer WHERE MONTHS=$month AND YEAR=$date";
-						}
-						else
-						{	
-			
-							  if($date==2021 && $month==1) $query.="SELECT $month as MONTHS,0 as NBRES";
-							else 				$query.=" UNION SELECT $month as MONTHS,  count(*) as NBRES FROM final_referentiel_retirer WHERE MONTHS=$month AND YEAR=$date";
-						}
-					}
-					 // echo $query;
-						$req=$bdd->query($query, PDO::FETCH_ASSOC);
-						$resultats=$req->fetchAll();
-				        $i=0;
-						foreach($resultats as $resultat )
-						{
-		                   if($result_all[$i]->NBRES==0)
-						   array_push($result,(object)array("MONTHS"=>$resultat["MONTHS"],"NBRES"=>0));
-							 else
-							array_push($result,(object)$resultat);
-							$i=$i+1;
-						}
-		  }	
-	   }	
-	}
-
-
-
-
-
-
-
-
-
-
-		$result1 = array();
-		if(isset($_GET["DISPATCH_DATE"]) && !empty($_GET["DISPATCH_DATE"]) )
-		{
-			$date=$_GET["DISPATCH_DATE"];
-			if(isset($_GET["ID_TAGS"]) and !empty($_GET["ID_TAGS"]) and $_GET["ID_TAGS"]!=="GLOBAL")
-			{
-			  if (isset($_GET["MONTH"]) && !empty($_GET["MONTH"]))
+				$date=$_GET["DISPATCH_DATE"];
+				if(isset($_GET["ID_TAGS"]) and !empty($_GET["ID_TAGS"]) and $_GET["ID_TAGS"]!=="GLOBAL")
 				{
-						$MONTHS=explode(",", $_GET["MONTH"]);
-						foreach($MONTHS  as $key => $month)
-						{
-							if ($key==0)
-							{
-										
-									if($date==2021 && $month==1) $query="SELECT $month as MONTHS,0 as NBRES";
-								else $query="SELECT $month as MONTHS,  count(*) as NBRES  FROM `final_referentiel_ajouter` WHERE `TUTELLE`='".$_GET["ID_TAGS"]."' AND `MONTHS`=$month AND `YEAR`=$date";
-							}
-							else
-							{
-								
-								
-								if($date==2021 && $month==1) $query.="SELECT $month as MONTHS,0 as NBRES";
-								else $query.=" UNION SELECT $month as MONTHS,  count(*) as NBRES  FROM `final_referentiel_ajouter` WHERE `TUTELLE`='".$_GET["ID_TAGS"]."' AND `MONTHS`=$month AND `YEAR`=$date";
-							}
-						}
-					//	echo $query;
-							$req=$bdd->query($query, PDO::FETCH_ASSOC);
-							$result1ats=$req->fetchAll();
-							$i=0;
-							foreach($result1ats as $result1at )
-							{
-								
-							array_push($result1,(object)$result1at);
-								
-								
-							}
-				}	
-			}
-			else
-			{
 				if (isset($_GET["MONTH"]) && !empty($_GET["MONTH"]))
+					{
+							$MONTHS=explode(",", $_GET["MONTH"]);
+							foreach($MONTHS  as $key => $month)
+							{
+								if ($key==0)
+								{
+											
+										if($date==2021 && $month==1) $query="SELECT $month as MONTHS,0 as NBRES";
+									else $query="SELECT $month as MONTHS,  count(*) as NBRES  FROM `final_referentiel_retirer` WHERE `TUTELLE`='".$_GET["ID_TAGS"]."' AND `MONTHS`=$month AND `YEAR`=$date";
+								}
+								else
+								{
+									
+									
+									if($date==2021 && $month==1) $query.="SELECT $month as MONTHS,0 as NBRES";
+									else $query.=" UNION SELECT $month as MONTHS,  count(*) as NBRES  FROM `final_referentiel_retirer` WHERE `TUTELLE`='".$_GET["ID_TAGS"]."' AND `MONTHS`=$month AND `YEAR`=$date";
+								}
+							}
+						//	//echo $query;
+								$req=$bdd->query($query, PDO::FETCH_ASSOC);
+								$resultats=$req->fetchAll();
+								$i=0;
+								foreach($resultats as $resultat )
+								{
+								if($result_all[$i]->NBRES==0)
+								array_push($result,(object)array("MONTHS"=>$resultat["MONTHS"],"NBRES"=>0));
+									else
+									array_push($result,(object)$resultat);
+									$i=$i+1;
+								}
+					}
+					//echo $query;	
+				}
+				else
 				{
-						$MONTHS=explode(",", $_GET["MONTH"]);
-						foreach($MONTHS  as $key => $month)
-						{
-							if ($key==0)
+					if (isset($_GET["MONTH"]) && !empty($_GET["MONTH"]))
+					{
+							$MONTHS=explode(",", $_GET["MONTH"]);
+							foreach($MONTHS  as $key => $month)
 							{
-								 
-								   if($date==2021 && $month==1) $query="SELECT $month as MONTHS,0 as NBRES";	
-								else  $query="SELECT $month as MONTHS,  count(*) as NBRES  FROM final_referentiel_ajouter WHERE MONTHS=$month AND YEAR=$date";
+								if ($key==0)
+								{
+									
+									if($date==2021 && $month==1) $query="SELECT $month as MONTHS,0 as NBRES";	
+									else  $query="SELECT $month as MONTHS,  count(*) as NBRES  FROM final_referentiel_retirer WHERE MONTHS=$month AND YEAR=$date";
+								}
+								else
+								{	
+					
+									if($date==2021 && $month==1) $query.="SELECT $month as MONTHS,0 as NBRES";
+									else 				$query.=" UNION SELECT $month as MONTHS,  count(*) as NBRES FROM final_referentiel_retirer WHERE MONTHS=$month AND YEAR=$date";
+								}
 							}
-							else
-							{	
+							// //echo $query;
+								$req=$bdd->query($query, PDO::FETCH_ASSOC);
+								$resultats=$req->fetchAll();
+								$i=0;
+								foreach($resultats as $resultat )
+								{
+								if($result_all[$i]->NBRES==0)
+								array_push($result,(object)array("MONTHS"=>$resultat["MONTHS"],"NBRES"=>0));
+									else
+									array_push($result,(object)$resultat);
+									$i=$i+1;
+								}
+				}	
+			}	
+			}
+
+
+
+
+
+
+
+
+
+
+	$result1 = array();
+			if(isset($_GET["DISPATCH_DATE"]) && !empty($_GET["DISPATCH_DATE"]) )
+			{
+				$date=$_GET["DISPATCH_DATE"];
+				if(isset($_GET["ID_TAGS"]) and !empty($_GET["ID_TAGS"]) and $_GET["ID_TAGS"]!=="GLOBAL")
+				{
+				if (isset($_GET["MONTH"]) && !empty($_GET["MONTH"]))
+					{
+							$MONTHS=explode(",", $_GET["MONTH"]);
+							foreach($MONTHS  as $key => $month)
+							{
+								if ($key==0)
+								{
+											
+										if($date==2021 && $month==1) $query="SELECT $month as MONTHS,0 as NBRES";
+									else $query="SELECT $month as MONTHS,  count(*) as NBRES  FROM `final_referentiel_ajouter` WHERE `TUTELLE`='".$_GET["ID_TAGS"]."' AND `MONTHS`=$month AND `YEAR`=$date";
+								}
+								else
+								{
+									
+									
+									if($date==2021 && $month==1) $query.="SELECT $month as MONTHS,0 as NBRES";
+									else $query.=" UNION SELECT $month as MONTHS,  count(*) as NBRES  FROM `final_referentiel_ajouter` WHERE `TUTELLE`='".$_GET["ID_TAGS"]."' AND `MONTHS`=$month AND `YEAR`=$date";
+								}
+							}
+						//	//echo $query;
+								$req=$bdd->query($query, PDO::FETCH_ASSOC);
+								$result1ats=$req->fetchAll();
+								$i=0;
+								foreach($result1ats as $result1at )
+								{
+									
+								array_push($result1,(object)$result1at);
+									
+									
+								}
+					}	
+					//echo $query;
+				}
+				else
+				{
+					if (isset($_GET["MONTH"]) && !empty($_GET["MONTH"]))
+					{
+							$MONTHS=explode(",", $_GET["MONTH"]);
+							foreach($MONTHS  as $key => $month)
+							{
+								if ($key==0)
+								{
+									
+									if($date==2021 && $month==1) $query="SELECT $month as MONTHS,0 as NBRES";	
+									else  $query="SELECT $month as MONTHS,  count(*) as NBRES  FROM final_referentiel_ajouter WHERE MONTHS=$month AND YEAR=$date";
+								}
+								else
+								{	
+					
+									if($date==2021 && $month==1) $query.="SELECT $month as MONTHS,0 as NBRES";
+									else 				$query.=" UNION SELECT $month as MONTHS,  count(*) as NBRES FROM final_referentiel_ajouter WHERE MONTHS=$month AND YEAR=$date";
+								}
+							}
+							// //echo $query;
+								$req=$bdd->query($query, PDO::FETCH_ASSOC);
+								$result1ats=$req->fetchAll();
+								$i=0;
+								foreach($result1ats as $result1at )
+								{
 				
-								  if($date==2021 && $month==1) $query.="SELECT $month as MONTHS,0 as NBRES";
-								else 				$query.=" UNION SELECT $month as MONTHS,  count(*) as NBRES FROM final_referentiel_ajouter WHERE MONTHS=$month AND YEAR=$date";
-							}
-						}
-					     // echo $query;
-							$req=$bdd->query($query, PDO::FETCH_ASSOC);
-							$result1ats=$req->fetchAll();
-					        $i=0;
-							foreach($result1ats as $result1at )
-							{
-			
-								
-							array_push($result1,(object)$result1at);
-								
-								
-							}
-						   
-							print(json_encode(array("total_facturer"=>$result_all,"total_ajouter"=>$result1,"total_retirer"=>$result), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK));
-							$req->closeCursor();
+									
+								array_push($result1,(object)$result1at);
+									
+									
+								}
 							
-			  }	
-		   }	
-		}
+						
+								
+				}	
+			}	
+			}
+			print(json_encode(array("total_facturer"=>$result_all,"total_ajouter"=>$result1,"total_retirer"=>$result), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK));
+			$req->closeCursor();
 	}
 
 
@@ -967,7 +971,7 @@ if (isset($_GET["getCountNewContractInMonth"]))
 								else $query.=" UNION SELECT $month as MONTHS,  count(*) as NBRES  FROM `final_referentiel_ajouter` WHERE `TUTELLE`='".$_GET["ID_TAGS"]."' AND `MONTHS`=$month AND `YEAR`=$date";
 							}
 						}
-					//	echo $query;
+					//	//echo $query;
 							$req=$bdd->query($query, PDO::FETCH_ASSOC);
 							$resultats=$req->fetchAll();
 						
@@ -1000,7 +1004,7 @@ if (isset($_GET["getCountNewContractInMonth"]))
 								else 				$query.=" UNION SELECT $month as MONTHS,  count(*) as NBRES FROM final_referentiel_ajouter WHERE MONTHS=$month AND YEAR=$date";
 							}
 						}
-					     // echo $query;
+					     // //echo $query;
 							$req=$bdd->query($query, PDO::FETCH_ASSOC);
 							$resultats=$req->fetchAll();
 							foreach($resultats as $resultat )
@@ -1249,7 +1253,7 @@ if (isset($_GET["getCountRemoveContractInMonth"]))
 								else $query.=" UNION SELECT $month as MONTHS,  count(*) as NBRES  FROM `final_referentiel_retirer` WHERE `TUTELLE`='".$_GET["ID_TAGS"]."' AND `MONTHS`=$month AND `YEAR`=$date";
 							}
 						}
-					//	echo $query;
+					//	//echo $query;
 							$req=$bdd->query($query, PDO::FETCH_ASSOC);
 							$resultats=$req->fetchAll();
 							
@@ -1282,7 +1286,7 @@ if (isset($_GET["getCountRemoveContractInMonth"]))
 								else 				$query.=" UNION SELECT $month as MONTHS,  count(*) as NBRES FROM final_referentiel_retirer WHERE MONTHS=$month AND YEAR=$date";
 							}
 						}
-					     // echo $query;
+					     // //echo $query;
 							$req=$bdd->query($query, PDO::FETCH_ASSOC);
 							$resultats=$req->fetchAll();
 							foreach($resultats as $resultat )
@@ -2719,7 +2723,7 @@ if (isset($_GET["getGlobalInformationsInstitutionsPerMonth"]))
                   c.SERVICE_NO=cpt.SERVICE_NO 
                 GROUP BY c.SERVICE_NO";
         //   $req=$bdd->query($query);
-        // echo $query;
+        // //echo $query;
               $req=$bdd->query($query, PDO::FETCH_ASSOC);
     
         while($resultat=$req->fetch()){
@@ -2761,7 +2765,7 @@ if (isset($_GET["getGlobalInformationsInstitutionsPerMonth"]))
                   c.SERVICE_NO=cpt.SERVICE_NO 
                 GROUP BY c.SERVICE_NO";
         //   $req=$bdd->query($query);
-        // echo $query;
+        // //echo $query;
               $req=$bdd->query($query, PDO::FETCH_ASSOC);
     
         while($resultat=$req->fetch()){
@@ -2887,7 +2891,7 @@ if (isset($_GET["getGlobalInformationsInstitutionsPerMonth"]))
                   c.SERVICE_NO=cpt.SERVICE_NO 
                 GROUP BY c.SERVICE_NO";
         //   $req=$bdd->query($query);
-        // echo $query;
+        // //echo $query;
               $req=$bdd->query($query, PDO::FETCH_ASSOC);
     
         while($resultat=$req->fetch()){
@@ -2929,7 +2933,7 @@ if (isset($_GET["getGlobalInformationsInstitutionsPerMonth"]))
                   c.SERVICE_NO=cpt.SERVICE_NO 
                 GROUP BY c.SERVICE_NO";
         //   $req=$bdd->query($query);
-        // echo $query;
+        // //echo $query;
               $req=$bdd->query($query, PDO::FETCH_ASSOC);
     
         while($resultat=$req->fetch()){
@@ -3054,7 +3058,7 @@ if (isset($_GET["getGlobalInformationsInstitutionsPerMonth"]))
 //               c.SERVICE_NO=cpt.SERVICE_NO 
 //             GROUP BY c.SERVICE_NO";
 //     //   $req=$bdd->query($query);
-//     // echo $query;
+//     // //echo $query;
 //           $req=$bdd->query($query, PDO::FETCH_ASSOC);
 
 //     while($resultat=$req->fetch()){
@@ -3096,7 +3100,7 @@ if (isset($_GET["getGlobalInformationsInstitutionsPerMonth"]))
 //               c.SERVICE_NO=cpt.SERVICE_NO 
 //             GROUP BY c.SERVICE_NO";
 //     //   $req=$bdd->query($query);
-//     // echo $query;
+//     // //echo $query;
 //           $req=$bdd->query($query, PDO::FETCH_ASSOC);
 
 //     while($resultat=$req->fetch()){
@@ -3846,7 +3850,7 @@ echo $response;
 									  b.SERVICE_NO = cpt.SERVICE_NO AND cpt.`ID_TAGS` = '".$_GET["ID_TAGS"]."' AND
 								  YEAR(STR_TO_DATE(`DISPATCH_DATE`,'%m/%d/%Y'))=".$_GET['DISPATCH_DATE'];
 								  
-							  // 	echo $query;
+							  // 	//echo $query;
 											  $queryT="SELECT 
 								 SUM(IFNULL(bc.CONSUMPTION,0)) as SOMME,
 								 SUM(IFNULL(bc.AMOUNT_WITH_TAX,0)) AS PRICE,
@@ -4869,7 +4873,7 @@ echo $response;
 									 YEAR(STR_TO_DATE(`DISPATCH_DATE`,'%m/%d/%Y'))=".$_GET['DISPATCH_DATE']."
 									 AND 
 										 MONTH(STR_TO_DATE(b.DISPATCH_DATE,'%m/%d/%Y')) IN(".$_GET['MONTH'].")";
-								 //    echo $query;
+								 //    //echo $query;
 										 $req=$bdd->query($query);
 										 $resultat=$req->fetch();
 										 print(json_encode(array(
@@ -4959,7 +4963,7 @@ echo $response;
 					   c.TUTELLE='".$_GET['TUTELLE']."' 
 						 AND 
 					   YEAR(STR_TO_DATE(`DISPATCH_DATE`,'%m/%d/%Y'))=".$_GET['DISPATCH_DATE'];
-					   //    echo $query;
+					   //    //echo $query;
 							$req=$bdd->query($query);
 							$resultat=$req->fetch();
 							print(json_encode(array(
