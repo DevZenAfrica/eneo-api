@@ -3618,7 +3618,7 @@ echo $response;
 					  
 					                               
 												 
-												  foreach ($_GET["MONTH"] as $key => $i) 
+												  foreach (explode(",",$_GET["MONTH"]) as $key => $i) 
 												  {
 					  
 													 $query="SELECT DISTINCT  b.`SERVICE_NO` FROM `final_referentiele` b WHERE  b.SERVICE_NO IN( SELECT SERVICE_NO FROM contrat_possede_tags WHERE ID_TAGS = '".$_GET["ID_TAGS"]."' ) and YEAR(b.SAVE_DATE)=2023 and MONTH(b.SAVE_DATE)=$i";
