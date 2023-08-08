@@ -101,11 +101,11 @@ use PHPMailer\PHPMailer\Exception;
 // Génération d'un vecteur d'initialisation aléatoire
 if(isset($_GET["verifyResetOTP"]))
 {
-	 $tr=((isset($_GET["EMAIL"]) || isset($_GET["PHONE"])) && isset($_GET["OTP"])) ;
+	 $tr=(isset($_GET["EmailOrPhone"]) && isset($_GET["OTP"])) ;
 			
 			if( $tr)
 			{
-			$val=$_GET["EMAIL"]??$_GET["PHONE"];
+			$val=$_GET["EmailOrPhone"];
 			$query="SELECT ID_UTILISATEUR  FROM utilisateur WHERE EMAIL='$val' or PHONE='$val'";
 			$id_user=getData($query,null)[0]['ID_UTILISATEUR']??0;
 			print(json_encode(verifyResetOTP($id_user,$_GET["OTP"]), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK));
@@ -294,11 +294,11 @@ function generateOTP() {
 
  	if(isset($_GET["sendOTP"]))
 		{
-			$tr=(isset($_GET["EMAIL"]) || isset($_GET["PHONE"])) ;
+			$tr=(isset($_GET["EmailOrPhone"])) ;
 			$otp = generateOTP();
 			if( $tr)
 			{
-			$val=$_GET["EMAIL"]??$_GET["PHONE"];
+			$val=$_GET["EmailOrPhone"];
 		
 			$query="SELECT ID_UTILISATEUR  FROM utilisateur WHERE EMAIL='$val' or PHONE='$val'";
 			$id_user=getData($query,null)[0]['ID_UTILISATEUR']??0;
@@ -312,7 +312,7 @@ function generateOTP() {
 		 {
 			if(validateString($val)==1)
 			{
-				if(sendPasswordResetEmail($_GET["EMAIL"],$otp))
+				if(sendPasswordResetEmail($_GET["EmailOrPhone"],$otp))
 				{
 				  $query="INSERT INTO `otps_verification` (`id`, `user_id`, `otp`, `created_at`) VALUES (NULL, '$id_user', '$otp', current_timestamp())"; 
 					 $req=$bdd->query($query, PDO::FETCH_ASSOC);
@@ -328,7 +328,7 @@ function generateOTP() {
 			}
 			else if(validateString($val)==2)
 			{
-				if(sendPasswordResetPhone($_GET["PHONE"],$otp))
+				if(sendPasswordResetPhone($_GET["EmailOrPhone"],$otp))
 				{
 				  $query="INSERT INTO `otps_verification` (`id`, `user_id`, `otp`, `created_at`) VALUES (NULL, '$id_user', '$otp', current_timestamp())"; 
 					 $req=$bdd->query($query, PDO::FETCH_ASSOC);
