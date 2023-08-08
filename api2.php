@@ -1,18 +1,25 @@
 <?php
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
+
 	include("connect_bd.php");
+    include("myfunctions.php");
 
 	header('Content-type:application/json;charset=utf-8');
+
 	// Autoriser l'accès depuis n'importe quelle origine
-header('Access-Control-Allow-Origin: *');
+	header('Access-Control-Allow-Origin: *');
 
-// Autoriser les méthodes de requête spécifiées
-header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE');
+	// Autoriser les méthodes de requête spécifiées
+	header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE');
 
-// Autoriser les en-têtes personnalisés et les en-têtes par défaut
-header('Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept');
+	// Autoriser les en-têtes personnalisés et les en-têtes par défaut
+	header('Access-Control-Allow-Headers: Origin, X-Requested-With, Content-Type, Accept');
 
-// Spécifier la durée de validité des résultats préchargés (en secondes)
-header('Access-Control-Max-Age: 3600');
+	// Spécifier la durée de validité des résultats préchargés (en secondes)
+	header('Access-Control-Max-Age: 3600');
+
+
 
 	$key = "f3c6f9640ce74c2fb73e27b955064425";
 
@@ -92,36 +99,254 @@ header('Access-Control-Max-Age: 3600');
 	}
 
 // Génération d'un vecteur d'initialisation aléatoire
+if(isset($_GET["verifyResetOTP"]))
+{
+	 $tr=((isset($_GET["EMAIL"]) || isset($_GET["PHONE"])) && isset($_GET["OTP"])) ;
+			
+			if( $tr)
+			{
+			$val=$_GET["EMAIL"]??$_GET["PHONE"];
+			$query="SELECT ID_UTILISATEUR  FROM utilisateur WHERE EMAIL='$val' or PHONE='$val'";
+			$id_user=getData($query,null)[0]['ID_UTILISATEUR']??0;
+			print(json_encode(verifyResetOTP($id_user,$_GET["OTP"]), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_NUMERIC_CHECK));
+
+           }
+
+}
 
 
+function verifyResetOTP($userId, $otp) {
+    include("connect_bd.php");  // Inclure le fichier contenant l'objet PDO
+
+    try {
+        $stmt = $bdd->prepare("SELECT * FROM otps_verification WHERE user_id = :userId AND otp = :otp");
+        $stmt->bindParam(':userId', $userId);
+        $stmt->bindParam(':otp', $otp);
+        $stmt->execute();
+
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($result) {
+            $stmt = $bdd->prepare("DELETE FROM otps_verification WHERE id = :id");
+            $stmt->bindParam(':id', $result['id']);
+            $stmt->execute();
+
+            $stmt = $bdd->prepare("SELECT * FROM utilisateur WHERE ID_UTILISATEUR = :userId");
+            $stmt->bindParam(':userId', $userId);
+            $stmt->execute();
+
+            $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            $newPassword = generateNewPassword();
+			$key = "f3c6f9640ce74c2fb73e27b955064425";
+            $hashedPassword = encrypt($newPassword, $key, $key);
+
+            $stmt = $bdd->prepare("UPDATE utilisateur SET PASSWORD = :password WHERE ID_UTILISATEUR = :userId");
+            $stmt->bindParam(':password', $hashedPassword);
+            $stmt->bindParam(':userId', $userId);
+            $stmt->execute();
+			$phone = $user['PHONE'];
+            $recipientEmail = $user['EMAIL'];
+			sendPasswordResetSuccessPhone($phone,$newPassword);
+            sendPasswordResetSuccessEmail($recipientEmail, $newPassword);
+
+            return true;
+        } else {
+            return false;
+        }
+    } catch (PDOException $e) {
+       // echo "Erreur de connexion à la base de données : " . $e->getMessage();
+        return false;
+    }
+}
+
+function sendPasswordResetSuccessEmail($recipientAddress,$newPassword) {
+    // Load Composer's autoloader
+    require './vendor/autoload.php';
+
+    // Create an instance; passing `true` enables exceptions
+    $mail = new PHPMailer(true);
+
+    // Configure the SMTP server settings
+    $mail->isSMTP();
+    $mail->Host = 'smtp.gmail.com';
+    $mail->SMTPAuth = true;
+    $mail->Username = 'tiako1998@gmail.com';
+    $mail->Password = 'upbgrydcfzmadudw';
+    $mail->SMTPSecure = 'ssl';
+    $mail->Port = 465;
+
+    // Set the sender and recipient information
+    $mail->setFrom('support-myeasylight@eneo.com', 'MyEasyLight - Cameroon State Portal');
+    $mail->addAddress($recipientAddress);
+    
+    // Generate the OTP (One-Time Password)
+    // Replace this with your actual OTP generation logic
+
+    // Load the content of "mailcontent.php" and replace the placeholder with the OTP
+    ob_start();
+    require "mailcontentNewPassword.php";
+    $body = ob_get_contents();
+    ob_end_clean();
+
+    // Replace the placeholder with the actual OTP in the body content
+    $body = str_replace('{{newPassword}}', $newPassword, $body);
+
+    $mail->isHTML(true);
+    $mail->Subject = 'Nouveau de mot de passe';
+    $mail->Body = $body;
+
+    // Send the email
+    if (!$mail->send()) {
+        return false;
+    } else {
+        return true;
+    }
+}
+
+//validateString
+
+function sendPasswordResetSuccessPhone($phone,$newPassword) {
+   
+	$sms="Bonjour,\n\nVotre nouveau mot de passe est : " . $newPassword . "\n\nNous vous recommandons de le changer dès que possible.\n\nCordialement,\nVotre équipe.";
+
+	 //$datasAll = array("sms"=>$sms,"telephone"=>$phone,"Sender"=>"MyEasyLight - Cameroon State Portal");
+     try {
+		$destination_phone= '237'.substr(str_replace(array(' ','-', '.', '_'), '', $phone),-9);
+		global_sendsms($destination_phone, $sms, 'MyEasyLight');
+	   
+		return true;
+	 } catch(Exception $e) 
+	  {
+		return false;
+	 }    
+    
+}
+
+function sendPasswordResetPhone($phone,$otp) {
+   
+	$sms="code de réinitialisation de mot de passe : $otp. Ne partagez jamais ce code avec qui que ce soit. Il est valable uniquement pour une courte période de temps. Merci";
+
+	 //$datasAll = array("sms"=>$sms,"telephone"=>$phone,"Sender"=>"MyEasyLight - Cameroon State Portal");
+     try {
+		$destination_phone= '237'.substr(str_replace(array(' ','-', '.', '_'), '', $phone),-9);
+		global_sendsms($destination_phone, $sms, 'MyEasyLight');
+	   
+		return true;
+	 } catch(Exception $e) 
+	  {
+		return false;
+	 }    
+    
+}
+
+function sendPasswordResetEmail($recipientAddress,$otp) {
+    // Load Composer's autoloader
+    require './vendor/autoload.php';
+
+    // Create an instance; passing `true` enables exceptions
+    $mail = new PHPMailer(true);
+
+    // Configure the SMTP server settings
+    $mail->isSMTP();
+    $mail->Host = 'smtp.gmail.com';
+    $mail->SMTPAuth = true;
+    $mail->Username = 'tiako1998@gmail.com';
+    $mail->Password = 'upbgrydcfzmadudw';
+    $mail->SMTPSecure = 'ssl';
+    $mail->Port = 465;
+
+    // Set the sender and recipient information
+    $mail->setFrom('support-myeasylight@eneo.com', 'MyEasyLight - Cameroon State Portal');
+    $mail->addAddress($recipientAddress);
+    
+    // Generate the OTP (One-Time Password)
+    // Replace this with your actual OTP generation logic
+
+    // Load the content of "mailcontent.php" and replace the placeholder with the OTP
+    ob_start();
+    require "mailcontent.php";
+    $body = ob_get_contents();
+    ob_end_clean();
+
+    // Replace the placeholder with the actual OTP in the body content
+    $body = str_replace('{{otp}}', $otp, $body);
+
+    $mail->isHTML(true);
+    $mail->Subject = 'Reinitialisation de mot de passe';
+    $mail->Body = $body;
+
+    // Send the email
+    if (!$mail->send()) {
+        return false;
+    } else {
+        return true;
+    }
+}
+
+// Example function to generate OTP (replace this with your actual OTP generation logic)
+function generateOTP() {
+    // Generate a random OTP (e.g., using random number generation or any other method you prefer)
+    $otp = rand(100000, 999999);
+    return $otp;
+}
+//  print(json_encode(getData("SELECT ID_UTILISATEUR  FROM utilisateur WHERE EMAIL='superadmin@gmail.com' or PHONE='superadmin@gmail.com'",null)[0]['ID_UTILISATEUR']));
 
  	if(isset($_GET["sendOTP"]))
 		{
-           $tr=(isset($_GET["EMAIL"]) || isset($_GET["PHONE"])) ;
-    
-         if( $tr)
-         {
-         $val=$_GET["EMAIL"]??$_GET["PHONE"];
+			$tr=(isset($_GET["EMAIL"]) || isset($_GET["PHONE"])) ;
+			$otp = generateOTP();
+			if( $tr)
+			{
+			$val=$_GET["EMAIL"]??$_GET["PHONE"];
+		
+			$query="SELECT ID_UTILISATEUR  FROM utilisateur WHERE EMAIL='$val' or PHONE='$val'";
+			$id_user=getData($query,null)[0]['ID_UTILISATEUR']??0;
+			//  $email=isset($_GET["EMAIL"])?$_GET["EMAIL"]:NULL;
+			//  $phone=isset($_GET["PHONE"])?$_GET["PHONE"]:NULL;
+			//  $nom=isset($_GET["NOM"])?$_GET["NOM"]:NULL;
+			//  $prenom=isset($_GET["PRENOM"])?$_GET["PRENOM"]:NULL;
+			//  $idParent=isset($_GET["ID_PARENT_UTILISATEUR"])?$_GET["ID_PARENT_UTILISATEUR"]:NULL;
 
-		 $query="SELECT ID_UTILISATEUR  FROM utilisateur WHERE EMAIL=$val or PHONE=$val";
-		 
-         $email=isset($_GET["EMAIL"])?$_GET["EMAIL"]:NULL;
-         $phone=isset($_GET["PHONE"])?$_GET["PHONE"]:NULL;
-		 $nom=isset($_GET["NOM"])?$_GET["NOM"]:NULL;
-         $prenom=isset($_GET["PRENOM"])?$_GET["PRENOM"]:NULL;
-		 $idParent=isset($_GET["ID_PARENT_UTILISATEUR"])?$_GET["ID_PARENT_UTILISATEUR"]:NULL;
+         if($id_user)
+		 {
+			if(validateString($val)==1)
+			{
+				if(sendPasswordResetEmail($_GET["EMAIL"],$otp))
+				{
+				  $query="INSERT INTO `otps_verification` (`id`, `user_id`, `otp`, `created_at`) VALUES (NULL, '$id_user', '$otp', current_timestamp())"; 
+					 $req=$bdd->query($query, PDO::FETCH_ASSOC);
+					 if($req)
+					 {
+					   print(true);   
+					 }
+					 else
+					 {
+						print(0); 
+					 }
+				}
+			}
+			else if(validateString($val)==2)
+			{
+				if(sendPasswordResetPhone($_GET["PHONE"],$otp))
+				{
+				  $query="INSERT INTO `otps_verification` (`id`, `user_id`, `otp`, `created_at`) VALUES (NULL, '$id_user', '$otp', current_timestamp())"; 
+					 $req=$bdd->query($query, PDO::FETCH_ASSOC);
+					 if($req)
+					 {
+					   print(true);   
+					 }
+					 else
+					 {
+						print(0); 
+					 }
+				}
+			}
+			else{
 
-         $query="INSERT INTO `utilisateur` (`ID_UTILISATEUR`, `ID_TAGS`, `EMAIL`, `PHONE`, `NOM`, `PRENOM`, `ID_PARENT_UTILISATEUR`)
-		         VALUES (NULL, '".$_GET["ID_TAGS"]."', '".$email."', '".$phone."', '".$nom."', '".$prenom."', '".$idParent."')"; 
-          $req=$bdd->query($query, PDO::FETCH_ASSOC);
-                 if($req)
-                 {
-                   print(true);   
-                 }
-                 else
-                 {
-                    print(0); 
-                 }
+			}
+			
+		  }
             }
 		}
 

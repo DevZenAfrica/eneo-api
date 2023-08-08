@@ -23,13 +23,15 @@ $mail->Port = 465;
 
 // configurer les informations de l'expéditeur et du destinataire support-myeasylight@eneo.cm tiako1998@gmail.com pseffi@opensolutions-it.com
 $mail->setFrom('support-myeasylight@eneo.com', 'MyEasyLight - Cameroon State Portal');
-$mail->addAddress('pseffi@opensolutions-it.com', 'SEFFI LOUBARD');
+$mail->addAddress('ctiako@opensolutions-it.com', 'SEFFI LOUBARD');
 
+
+$otp = rand(1000000, 9999999);
 
 // ajouter le corps de l'email
 
  ob_start();
-        require "mailcontent.php";
+        require "mailcontent.php?otp=" . $otp;
         $body = ob_get_contents();
         ob_end_clean();
 $mail->isHTML(true);    
@@ -67,8 +69,8 @@ $mail->Body = '<!DOCTYPE html>
 ';
 
 
-$mail->Body    = $body;
-$mail->AltBody = 'This is the body in plain text for non-HTML mail clients';
+//$mail->Body    = $body;
+//$mail->AltBody = 'This is the body in plain text for non-HTML mail clients';
 
 // envoyer l'email
 if(!$mail->send()) {
